@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "packageManager": "pnpm@10.34.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
   "volta": {
     "node": "20.20.2"
   },
