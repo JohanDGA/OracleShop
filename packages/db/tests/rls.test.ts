@@ -9,6 +9,12 @@ import {
 const keys = getLocalKeys();
 const service = makeServiceClient(keys);
 
+// Postgres SQLSTATE para violación de RLS (insufficient_privilege). PostgREST lo
+// propaga como error.code; afirmar este código exacto evita falsos positivos
+// (un error por otra causa, p.ej. NOT NULL, NO contaría como denegación de RLS).
+const RLS_VIOLATION = "42501";
+const TEST_PASSWORD = "password123";
+
 let userA: { userId: string; client: SupabaseClient };
 let userB: { userId: string; client: SupabaseClient };
 let householdA: string;
@@ -17,8 +23,8 @@ let receiptA: string;
 
 beforeAll(async () => {
   const stamp = Date.now();
-  userA = await makeUserClient(keys, service, `a_${stamp}@test.local`, "password123");
-  userB = await makeUserClient(keys, service, `b_${stamp}@test.local`, "password123");
+  userA = await makeUserClient(keys, service, `a_${stamp}@test.local`, TEST_PASSWORD);
+  userB = await makeUserClient(keys, service, `b_${stamp}@test.local`, TEST_PASSWORD);
 
   // Hogar A con su miembro y un recibo (sembrado con service_role)
   const { data: hA, error: hAErr } = await service
@@ -98,7 +104,7 @@ describe("RLS: aislamiento entre hogares", () => {
     const { error } = await userB.client
       .from("receipts")
       .insert({ household_id: householdA, created_by: userB.userId, source: "manual" });
-    expect(error).not.toBeNull(); // viola la policy de INSERT
+    expect(error?.code).toBe(RLS_VIOLATION); // viola la policy de INSERT (RLS, no otra causa)
   });
 
   it("A NO ve el hogar de B", async () => {
@@ -138,7 +144,7 @@ describe("RLS: seguridad de household_members (sin auto-join)", () => {
       user_id: userB.userId,
       role: "member",
     });
-    expect(error).not.toBeNull(); // la policy bloquea el self-join a hogar ajeno
+    expect(error?.code).toBe(RLS_VIOLATION); // la policy bloquea el self-join a hogar ajeno
 
     // Y como consecuencia B sigue sin ver el recibo de A
     const { data } = await userB.client
