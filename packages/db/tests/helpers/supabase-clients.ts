@@ -42,12 +42,17 @@ export function getLocalKeys(): LocalKeys {
     encoding: "utf-8",
     cwd: process.cwd(),
   });
-  const json = JSON.parse(raw) as Record<string, string>;
-  return {
-    apiUrl: json.API_URL,
-    anonKey: json.ANON_KEY,
-    serviceRoleKey: json.SERVICE_ROLE_KEY,
-  };
+  const json = JSON.parse(raw) as Record<string, string | undefined>;
+  const apiUrl = json.API_URL;
+  const anonKey = json.ANON_KEY;
+  const serviceRoleKey = json.SERVICE_ROLE_KEY;
+  if (!apiUrl || !anonKey || !serviceRoleKey) {
+    throw new Error(
+      "No se pudieron leer API_URL/ANON_KEY/SERVICE_ROLE_KEY de `supabase status -o json`. " +
+        "¿Está corriendo `supabase start`?",
+    );
+  }
+  return { apiUrl, anonKey, serviceRoleKey };
 }
 
 /** Cliente con service_role: bypasea RLS. Úsalo solo para sembrar/limpiar. */

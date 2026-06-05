@@ -1569,11 +1569,11 @@ Expected: "working tree clean". Todos los cambios commiteados.
 
 ## Definition of Done (Hito 0a)
 
-- [ ] `pnpm install` funciona desde la raíz sin error.
-- [ ] `pnpm exec supabase db reset` aplica las 3 migraciones (esquema, índices, RLS) sin error.
-- [ ] `pnpm --filter @oraculo/db test` pasa los 7 tests de RLS sobre DB limpia.
-- [ ] `pnpm typecheck` pasa.
-- [ ] Node 20 LTS está fijado vía Volta/`.nvmrc` (listo para el plan de mobile).
-- [ ] Working tree de git limpio.
+- [x] `pnpm install` funciona desde la raíz sin error.
+- [x] `pnpm exec supabase db reset` aplica las 3 migraciones (esquema, índices, RLS) sin error.
+- [x] `pnpm --filter @oraculo/db test` pasa los 8 tests de RLS sobre DB limpia (aislamiento, scope heredado, no self-join, hogar compartido).
+- [x] `pnpm typecheck` pasa (incluye `src` y `tests`).
+- [x] Node 20 LTS está fijado vía Volta/`.nvmrc` (listo para el plan de mobile).
+- [x] Working tree de git limpio.
 
 **Lo que NO incluye este plan (va en Plan 0b):** paquete `validations` (Zod), paquete `core` (lógica pura), app mobile Expo, login con Supabase Auth, Drizzle local SQLite, workflow de CI.
