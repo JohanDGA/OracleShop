@@ -947,6 +947,22 @@ as $$
   );
 $$;
 
+-- Helper: ¿el usuario actual es el creador del hogar? (SECURITY DEFINER para
+-- saltar la RLS de households en el bootstrap del primer miembro)
+create or replace function public.is_household_creator(hid uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.households h
+    where h.id = hid
+      and h.created_by = auth.uid()
+  );
+$$;
+
 -- Habilitar RLS en todas las tablas
 alter table public.households            enable row level security;
 alter table public.household_members     enable row level security;
@@ -973,9 +989,13 @@ create policy households_update on public.households
 -- household_members: ves filas de hogares donde eres miembro
 create policy household_members_select on public.household_members
   for select using (public.is_household_member(household_id));
+-- INSERT: un miembro existente puede agregar a otros (invitación), o el CREADOR
+-- del hogar puede auto-registrarse al crearlo (bootstrap). NUNCA permitir que un
+-- usuario cualquiera se una a un hogar ajeno (escalación de privilegios).
 create policy household_members_insert on public.household_members
   for insert with check (
-    public.is_household_member(household_id) or user_id = auth.uid()
+    public.is_household_member(household_id)
+    or (public.is_household_creator(household_id) and user_id = auth.uid())
   );
 
 -- Patrón household-scoped: SELECT/INSERT/UPDATE para stores
