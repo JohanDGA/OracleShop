@@ -947,6 +947,22 @@ as $$
   );
 $$;
 
+-- Helper: ¿el usuario actual es el creador del hogar? (SECURITY DEFINER para
+-- saltar la RLS de households en el bootstrap del primer miembro)
+create or replace function public.is_household_creator(hid uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.households h
+    where h.id = hid
+      and h.created_by = auth.uid()
+  );
+$$;
+
 -- Habilitar RLS en todas las tablas
 alter table public.households            enable row level security;
 alter table public.household_members     enable row level security;
@@ -973,9 +989,13 @@ create policy households_update on public.households
 -- household_members: ves filas de hogares donde eres miembro
 create policy household_members_select on public.household_members
   for select using (public.is_household_member(household_id));
+-- INSERT: un miembro existente puede agregar a otros (invitación), o el CREADOR
+-- del hogar puede auto-registrarse al crearlo (bootstrap). NUNCA permitir que un
+-- usuario cualquiera se una a un hogar ajeno (escalación de privilegios).
 create policy household_members_insert on public.household_members
   for insert with check (
-    public.is_household_member(household_id) or user_id = auth.uid()
+    public.is_household_member(household_id)
+    or (public.is_household_creator(household_id) and user_id = auth.uid())
   );
 
 -- Patrón household-scoped: SELECT/INSERT/UPDATE para stores
@@ -1549,11 +1569,11 @@ Expected: "working tree clean". Todos los cambios commiteados.
 
 ## Definition of Done (Hito 0a)
 
-- [ ] `pnpm install` funciona desde la raíz sin error.
-- [ ] `pnpm exec supabase db reset` aplica las 3 migraciones (esquema, índices, RLS) sin error.
-- [ ] `pnpm --filter @oraculo/db test` pasa los 7 tests de RLS sobre DB limpia.
-- [ ] `pnpm typecheck` pasa.
-- [ ] Node 20 LTS está fijado vía Volta/`.nvmrc` (listo para el plan de mobile).
-- [ ] Working tree de git limpio.
+- [x] `pnpm install` funciona desde la raíz sin error.
+- [x] `pnpm exec supabase db reset` aplica las 3 migraciones (esquema, índices, RLS) sin error.
+- [x] `pnpm --filter @oraculo/db test` pasa los 8 tests de RLS sobre DB limpia (aislamiento, scope heredado, no self-join, hogar compartido).
+- [x] `pnpm typecheck` pasa (incluye `src` y `tests`).
+- [x] Node 20 LTS está fijado vía Volta/`.nvmrc` (listo para el plan de mobile).
+- [x] Working tree de git limpio.
 
 **Lo que NO incluye este plan (va en Plan 0b):** paquete `validations` (Zod), paquete `core` (lógica pura), app mobile Expo, login con Supabase Auth, Drizzle local SQLite, workflow de CI.

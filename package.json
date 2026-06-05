@@ -1,0 +1,33 @@
+{
+  "name": "oraculo-de-compras",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.34.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "volta": {
+    "node": "20.20.2"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:start": "pnpm --filter @oraculo/db supabase:start",
+    "db:stop": "pnpm --filter @oraculo/db supabase:stop",
+    "db:reset": "pnpm --filter @oraculo/db supabase:reset",
+    "db:test": "pnpm --filter @oraculo/db test"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "supabase",
+      "esbuild"
+    ]
+  }
+}

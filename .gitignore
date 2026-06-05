@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.turbo/
+*.log
+# Env files (keep .env.example tracked when added)
+.env
+.env.*
+!.env.example
+# Coverage
+coverage/
+# Supabase local
+packages/db/supabase/.temp/
+packages/db/supabase/.branches/

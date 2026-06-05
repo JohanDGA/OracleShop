@@ -1,0 +1,26 @@
+{
+  "name": "@oraculo/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/schema.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:status": "supabase status"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.33.0"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@types/node": "^20.14.0",
+    "drizzle-kit": "^0.24.0",
+    "supabase": "^1.200.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
