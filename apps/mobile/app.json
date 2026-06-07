@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Oraculo de Compras",
+    "slug": "oraculo-de-compras",
+    "scheme": "oraculo",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.oraculo.compras" },
+    "android": { "package": "com.oraculo.compras" },
+    "web": { "bundler": "metro", "output": "single" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": false }
+  }
+}
