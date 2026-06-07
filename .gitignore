@@ -11,3 +11,7 @@ coverage/
 # Supabase local
 packages/db/supabase/.temp/
 packages/db/supabase/.branches/
+# Expo
+.expo/
+apps/*/.expo/
+apps/*/web-build/
