@@ -1,9 +1,13 @@
 const SCALE = 4n;
 const SCALE_FACTOR = 10n ** SCALE; // 10000n
 
-/** String decimal (p.ej. "1234.56") → unidades menores escala 4, sin floats. */
-export function toMinorUnits(amount: string): bigint {
-  const trimmed = amount.trim();
+/**
+ * Monto decimal → unidades menores escala 4, sin floats.
+ * Acepta string ("1234.56") o number: PostgREST devuelve columnas NUMERIC como
+ * JSON number, así que coercemos a string antes de parsear.
+ */
+export function toMinorUnits(amount: string | number): bigint {
+  const trimmed = String(amount).trim();
   const negative = trimmed.startsWith("-");
   const unsigned = negative ? trimmed.slice(1) : trimmed;
   const [intPart = "", fracPart = ""] = unsigned.split(".");
@@ -21,15 +25,15 @@ export function fromMinorUnits(minor: bigint): string {
   return `${negative ? "-" : ""}${intPart.toString()}.${fracStr}`;
 }
 
-/** Suma exacta de montos string. */
-export function sumAmounts(amounts: string[]): string {
+/** Suma exacta de montos (string o number). */
+export function sumAmounts(amounts: (string | number)[]): string {
   let total = 0n;
   for (const a of amounts) total += toMinorUnits(a);
   return fromMinorUnits(total);
 }
 
 /** Formato display COP (es-CO, sin decimales). Number() solo para display. */
-export function formatCOP(amount: string): string {
+export function formatCOP(amount: string | number): string {
   const pesos = Number(fromMinorUnits(toMinorUnits(amount)));
   return new Intl.NumberFormat("es-CO", {
     style: "currency",

@@ -20,6 +20,10 @@ describe("toMinorUnits / fromMinorUnits", () => {
   it("round-trip", () => {
     expect(fromMinorUnits(toMinorUnits("999.9999"))).toBe("999.9999");
   });
+  it("acepta number (PostgREST devuelve NUMERIC como number)", () => {
+    expect(toMinorUnits(25000)).toBe(250000000n);
+    expect(toMinorUnits(1234.56)).toBe(12345600n);
+  });
 });
 
 describe("sumAmounts", () => {
