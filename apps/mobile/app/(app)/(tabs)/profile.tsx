@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useAuth } from "../../lib/auth-context";
-import { supabase } from "../../lib/supabase";
-import { getActiveHousehold, type Household } from "../../services/household";
+import { useAuth } from "../../../lib/auth-context";
+import { supabase } from "../../../lib/supabase";
+import { getActiveHousehold, type Household } from "../../../services/household";
 
-export default function Home() {
+export default function Profile() {
   const { session } = useAuth();
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +19,7 @@ export default function Home() {
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: "600" }}>Hola</Text>
+      <Text style={{ fontSize: 22, fontWeight: "600" }}>Perfil</Text>
       <Text>Sesión: {session?.user.email ?? "—"}</Text>
       {loading ? (
         <ActivityIndicator />
