@@ -2,7 +2,6 @@ import { signUpSchema } from "@oraculo/validations";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
-import { bootstrapHousehold } from "../../services/household";
 import { supabase } from "../../lib/supabase";
 
 export default function SignUp() {
@@ -20,15 +19,13 @@ export default function SignUp() {
     }
     setBusy(true);
     try {
-      const { data, error: signErr } = await supabase.auth.signUp(parsed.data);
-      if (signErr || !data.user) {
-        setError(signErr?.message ?? "No se pudo registrar");
+      const { error: signErr } = await supabase.auth.signUp(parsed.data);
+      if (signErr) {
+        setError(signErr.message);
         return;
       }
-      // Con confirmación de email desactivada en local, hay sesión inmediata.
-      const defaultName = `Hogar de ${parsed.data.email.split("@")[0]}`;
-      await bootstrapHousehold(data.user.id, defaultName);
-      // El onAuthStateChange + gate redirigen a (app).
+      // El trigger handle_new_user crea el hogar; el gate redirige a (app)
+      // cuando onAuthStateChange detecta la sesión.
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error inesperado");
     } finally {
