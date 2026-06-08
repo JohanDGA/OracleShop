@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:start": "pnpm --filter @oraculo/db supabase:start",
@@ -21,8 +21,12 @@
     "db:test": "pnpm --filter @oraculo/db test"
   },
   "devDependencies": {
+    "@eslint/js": "9.9.0",
+    "eslint": "9.9.0",
+    "globals": "15.9.0",
     "turbo": "^2.1.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "typescript-eslint": "8.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
