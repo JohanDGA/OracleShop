@@ -90,3 +90,41 @@ export async function makeUserClient(
 
   return { userId: created.user.id, client };
 }
+
+/**
+ * Borra TODA la huella de un usuario y luego el usuario, con service_role.
+ * Necesario porque las FK a auth.users no tienen ON DELETE CASCADE y el trigger
+ * handle_new_user (0005) crea un hogar+membresía+settings por usuario; sin esta
+ * limpieza, auth.admin.deleteUser falla en silencio y deja datos residuales.
+ * Orden FK-seguro: por cada hogar creado por el usuario borra items→receipts→
+ * manual_expenses→members; luego user_settings y membresías del usuario; luego
+ * los hogares; finalmente el usuario (con el error surfaceado).
+ */
+export async function cleanupUser(service: SupabaseClient, userId: string): Promise<void> {
+  const { data: households } = await service
+    .from("households")
+    .select("id")
+    .eq("created_by", userId);
+  const householdIds = (households ?? []).map((h) => h.id as string);
+
+  for (const hid of householdIds) {
+    const { data: receipts } = await service.from("receipts").select("id").eq("household_id", hid);
+    for (const r of receipts ?? []) {
+      await service.from("receipt_items").delete().eq("receipt_id", r.id as string);
+    }
+    await service.from("receipts").delete().eq("household_id", hid);
+    await service.from("manual_expenses").delete().eq("household_id", hid);
+    await service.from("household_members").delete().eq("household_id", hid);
+  }
+
+  await service.from("user_settings").delete().eq("user_id", userId);
+  await service.from("household_members").delete().eq("user_id", userId);
+  if (householdIds.length > 0) {
+    await service.from("households").delete().in("id", householdIds);
+  }
+
+  const { error } = await service.auth.admin.deleteUser(userId);
+  if (error) {
+    throw new Error(`cleanupUser(${userId}): deleteUser falló: ${error.message}`);
+  }
+}
