@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-/** Monto monetario positivo como string NUMERIC(15,4): dígitos con hasta 4 decimales. */
+/** Monto monetario positivo como string NUMERIC(15,4): hasta 11 enteros + 4 decimales. */
 export const positiveAmount = z
   .string()
-  .regex(/^\d+(\.\d{1,4})?$/, "Monto inválido")
+  .regex(/^\d{1,11}(\.\d{1,4})?$/, "Monto inválido")
   .refine((s) => Number(s) > 0, "El monto debe ser mayor que 0");
 
 /** Fecha en formato ISO YYYY-MM-DD. */
