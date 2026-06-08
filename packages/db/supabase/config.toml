@@ -221,6 +221,15 @@ url = ""
 # If enabled, the nonce check will be skipped. Required for local sign in with Google auth.
 skip_nonce_check = false
 
+# Google OAuth. Credenciales por variable de entorno (ver packages/db/.env.example).
+# skip_nonce_check requerido para el login con Google en local (Expo Web).
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+skip_nonce_check = true
+
 # Use Firebase Auth as a third-party provider alongside Supabase Auth.
 [auth.third_party.firebase]
 enabled = false
