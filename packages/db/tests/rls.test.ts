@@ -4,6 +4,7 @@ import {
   getLocalKeys,
   makeServiceClient,
   makeUserClient,
+  cleanupUser,
 } from "./helpers/supabase-clients";
 
 const keys = getLocalKeys();
@@ -71,14 +72,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Limpieza con service_role (orden respeta las FKs)
-  await service.from("receipt_items").delete().eq("receipt_id", receiptA);
-  await service.from("receipts").delete().eq("household_id", householdA);
-  await service.from("household_members").delete().eq("household_id", householdA);
-  await service.from("household_members").delete().eq("household_id", householdB);
-  await service.from("households").delete().in("id", [householdA, householdB]);
-  await service.auth.admin.deleteUser(userA.userId);
-  await service.auth.admin.deleteUser(userB.userId);
+  // cleanupUser borra toda la huella de cada usuario (incl. el hogar creado por
+  // el trigger 0005) y luego el usuario; surfacea errores de deleteUser.
+  await cleanupUser(service, userA.userId);
+  await cleanupUser(service, userB.userId);
 });
 
 describe("RLS: aislamiento entre hogares", () => {

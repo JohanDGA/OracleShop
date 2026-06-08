@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getLocalKeys, makeServiceClient, makeUserClient } from "./helpers/supabase-clients";
+import { getLocalKeys, makeServiceClient, makeUserClient, cleanupUser } from "./helpers/supabase-clients";
 
 const keys = getLocalKeys();
 const service = makeServiceClient(keys);
@@ -25,15 +25,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const { data: receipts } = await service.from("receipts").select("id").eq("household_id", householdA);
-  for (const r of receipts ?? []) {
-    await service.from("receipt_items").delete().eq("receipt_id", r.id);
-  }
-  await service.from("receipts").delete().eq("household_id", householdA);
-  await service.from("household_members").delete().in("household_id", [householdA, householdB]);
-  await service.from("households").delete().in("id", [householdA, householdB]);
-  await service.auth.admin.deleteUser(userA.userId);
-  await service.auth.admin.deleteUser(userB.userId);
+  // cleanupUser borra toda la huella de cada usuario (incl. el hogar del trigger
+  // 0005 y los receipts/items creados por la RPC) y luego el usuario.
+  await cleanupUser(service, userA.userId);
+  await cleanupUser(service, userB.userId);
 });
 
 describe("semilla de categorías de sistema", () => {
