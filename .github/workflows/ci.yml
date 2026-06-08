@@ -26,6 +26,13 @@ jobs:
   db:
     name: Supabase RLS tests
     runs-on: ubuntu-latest
+    # El proveedor Google en config.toml lee credenciales por env(). En CI no se
+    # prueba OAuth, pero TODOS los comandos de supabase (start, status -o json
+    # invocado por los tests, y stop) re-evalúan config.toml, así que las
+    # variables deben existir a nivel de job, no solo en el step de start.
+    env:
+      SUPABASE_AUTH_GOOGLE_CLIENT_ID: ci-dummy
+      SUPABASE_AUTH_GOOGLE_SECRET: ci-dummy
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,12 +44,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Start Supabase local
-        # El proveedor Google en config.toml lee credenciales por env(). En CI no
-        # se prueba OAuth, pero los valores deben existir para que `supabase start`
-        # no falle al resolver las variables.
-        env:
-          SUPABASE_AUTH_GOOGLE_CLIENT_ID: ci-dummy
-          SUPABASE_AUTH_GOOGLE_SECRET: ci-dummy
         run: pnpm --filter @oraculo/db exec supabase start
       - name: Run RLS tests
         run: pnpm --filter @oraculo/db test
