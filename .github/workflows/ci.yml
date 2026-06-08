@@ -22,6 +22,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm --filter @oraculo/validations test
+      - run: pnpm --filter @oraculo/core test
 
   db:
     name: Supabase RLS tests
