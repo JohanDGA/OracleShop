@@ -2,6 +2,7 @@ import { signUpSchema } from "@oraculo/validations";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { signInWithGoogle } from "../../lib/auth-google";
 import { supabase } from "../../lib/supabase";
 
 export default function SignUp() {
@@ -33,6 +34,18 @@ export default function SignUp() {
     }
   }
 
+  async function onGoogle() {
+    setError(null);
+    setBusy(true);
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error con Google");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
       <Text style={{ fontSize: 24, fontWeight: "600" }}>Crear cuenta</Text>
@@ -58,6 +71,13 @@ export default function SignUp() {
         style={{ backgroundColor: "#111", borderRadius: 8, padding: 14, alignItems: "center" }}
       >
         {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff" }}>Registrarme</Text>}
+      </Pressable>
+      <Pressable
+        onPress={onGoogle}
+        disabled={busy}
+        style={{ borderWidth: 1, borderColor: "#111", borderRadius: 8, padding: 14, alignItems: "center" }}
+      >
+        <Text style={{ color: "#111" }}>Continuar con Google</Text>
       </Pressable>
       <Link href="/(auth)/sign-in" style={{ textAlign: "center", marginTop: 8 }}>
         ¿Ya tienes cuenta? Inicia sesión

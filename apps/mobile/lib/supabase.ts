@@ -12,6 +12,9 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      // PKCE: signInWithOAuth devuelve un `code` que canjeamos manualmente con
+      // exchangeCodeForSession (ver lib/auth-google.ts).
+      flowType: "pkce",
     },
   },
 );
