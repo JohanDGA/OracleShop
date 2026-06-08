@@ -82,10 +82,10 @@ Mes seleccionado (rango [inicio, finExclusivo))
 ## 3. `packages/core` — lógica pura (TDD)
 
 ### `money.ts`
-Envoltura sobre **dinero.js** para sumar montos `NUMERIC(15,4)` representados como strings, sin floats.
-- `parseAmount(s: string): Dinero` — string decimal → dinero (escala 4).
-- `addAmounts(a: string, b: string): string` y `sumAmounts(xs: string[]): string`.
-- `formatAmount(s: string): string` — formato display (es-CO).
+Aritmética exacta de montos `NUMERIC(15,4)` (representados como strings) con **BigInt punto-fijo (escala 4)**, sin floats ni dependencias externas. (Se eligió BigInt sobre dinero.js: el requisito es exactitud sin floats; dinero.js v2 está en alpha y v1 expone floats en `toUnit`.)
+- `toMinorUnits(s: string): bigint` / `fromMinorUnits(b: bigint): string` — string decimal ↔ unidades menores (escala 4), sin floats.
+- `sumAmounts(xs: string[]): string` — suma exacta.
+- `formatCOP(s: string): string` — formato display (es-CO, COP sin decimales). El `Number()` solo se usa para display, nunca para aritmética.
 
 ### `monthly-summary.ts`
 ```typescript
