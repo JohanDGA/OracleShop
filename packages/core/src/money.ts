@@ -6,7 +6,7 @@ export function toMinorUnits(amount: string): bigint {
   const trimmed = amount.trim();
   const negative = trimmed.startsWith("-");
   const unsigned = negative ? trimmed.slice(1) : trimmed;
-  const [intPart, fracPart = ""] = unsigned.split(".");
+  const [intPart = "", fracPart = ""] = unsigned.split(".");
   const frac4 = (fracPart + "0000").slice(0, 4);
   const minor = BigInt(intPart === "" ? "0" : intPart) * SCALE_FACTOR + BigInt(frac4);
   return negative ? -minor : minor;
