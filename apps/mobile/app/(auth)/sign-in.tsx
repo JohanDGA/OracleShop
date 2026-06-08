@@ -2,6 +2,7 @@ import { signInSchema } from "@oraculo/validations";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { signInWithGoogle } from "../../lib/auth-google";
 import { supabase } from "../../lib/supabase";
 
 export default function SignIn() {
@@ -25,6 +26,18 @@ export default function SignIn() {
         return;
       }
       // El gate redirige a (app) al detectar la sesión.
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onGoogle() {
+    setError(null);
+    setBusy(true);
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error con Google");
     } finally {
       setBusy(false);
     }
@@ -55,6 +68,13 @@ export default function SignIn() {
         style={{ backgroundColor: "#111", borderRadius: 8, padding: 14, alignItems: "center" }}
       >
         {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff" }}>Entrar</Text>}
+      </Pressable>
+      <Pressable
+        onPress={onGoogle}
+        disabled={busy}
+        style={{ borderWidth: 1, borderColor: "#111", borderRadius: 8, padding: 14, alignItems: "center" }}
+      >
+        <Text style={{ color: "#111" }}>Continuar con Google</Text>
       </Pressable>
       <Link href="/(auth)/sign-up" style={{ textAlign: "center", marginTop: 8 }}>
         ¿No tienes cuenta? Regístrate
