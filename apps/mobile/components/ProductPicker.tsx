@@ -30,7 +30,6 @@ export function ProductPicker({ householdId, rawName, defaultCategoryId, value, 
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastQueried = useRef<string>("");
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -39,18 +38,21 @@ export function ProductPicker({ householdId, rawName, defaultCategoryId, value, 
       setNormalized("");
       return;
     }
+    const queryAtDispatch = rawName;
     timer.current = setTimeout(async () => {
       setLoading(true);
       setError(null);
       try {
-        const { normalized: n, result: r } = await matchProduct(householdId, rawName);
-        if (lastQueried.current !== rawName) lastQueried.current = rawName;
+        const { normalized: n, result: r } = await matchProduct(householdId, queryAtDispatch);
+        // Si el usuario siguió tecleando, descartar este resultado (stale).
+        if (queryAtDispatch !== rawName) return;
         setNormalized(n);
         setResult(r);
       } catch (e) {
+        if (queryAtDispatch !== rawName) return;
         setError(e instanceof Error ? e.message : "Error en match");
       } finally {
-        setLoading(false);
+        if (queryAtDispatch === rawName) setLoading(false);
       }
     }, DEBOUNCE_MS);
     return () => {
@@ -79,11 +81,13 @@ export function ProductPicker({ householdId, rawName, defaultCategoryId, value, 
   if (error) return <Text style={{ color: "red" }}>{error}</Text>;
   if (!rawName.trim()) return <Text style={{ color: "#999" }}>Escribe el nombre para sugerir un producto</Text>;
 
+  const exact = result.exact;
+
   return (
     <View style={{ gap: 6 }}>
-      {result.exact ? (
-        <Pressable onPress={() => pick(result.exact!, "exact")} style={chipStyle("#dcfce7")}>
-          <Text style={{ color: "#166534" }}>✓ {result.exact.name}</Text>
+      {exact ? (
+        <Pressable onPress={() => pick(exact, "exact")} style={chipStyle("#dcfce7")}>
+          <Text style={{ color: "#166534" }}>✓ {exact.name}</Text>
         </Pressable>
       ) : result.fuzzy.length > 0 ? (
         result.fuzzy.map((c) => (
@@ -193,7 +197,7 @@ function CreateCanonicalForm({ householdId, defaultName, defaultCategoryId, onCa
         placeholder="Cantidad por unidad (ej. 1, 0.9, 0.5)"
         keyboardType="numeric"
         value={unitQuantity}
-        onChangeText={setUnitQuantity}
+        onChangeText={(t) => setUnitQuantity(t.replace(/[^0-9.]/g, ""))}
         style={inputStyle}
       />
       <CategoryPicker householdId={householdId} value={categoryId} onChange={setCategoryId} />

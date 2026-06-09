@@ -82,11 +82,11 @@ export default function NewReceipt() {
     }
     setBusy(true);
     try {
-      // Instrumentación: emitir match_resolved 'manual' por items que se guardan sin canonical (spec §6).
+      await createManualReceipt(householdId, parsed.data);
+      // Instrumentación: emitir match_resolved 'manual' por items que se guardaron sin canonical (spec §6).
       for (const it of items) {
         if (!it.canonical) console.info("[match_resolved]", { layer: "manual" });
       }
-      await createManualReceipt(householdId, parsed.data);
       router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al guardar la factura");
