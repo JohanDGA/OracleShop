@@ -91,18 +91,15 @@ export async function listMonthEntries(
   return entries;
 }
 
+// Soft-delete vía RPC SECURITY DEFINER (ver 0008): un UPDATE directo del cliente
+// falla por la USING de la SELECT policy que filtra `deleted_at IS NULL` y que
+// PG aplica también como check post-UPDATE.
 export async function softDeleteManualExpense(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("manual_expenses")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await supabase.rpc("soft_delete_manual_expense", { p_id: id });
   if (error) throw new Error(error.message);
 }
 
 export async function softDeleteReceipt(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("receipts")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await supabase.rpc("soft_delete_receipt", { p_id: id });
   if (error) throw new Error(error.message);
 }

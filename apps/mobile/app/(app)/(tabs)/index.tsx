@@ -1,7 +1,7 @@
 import { formatCOP, monthRange } from "@oraculo/core";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Platform, Pressable, Text, View } from "react-native";
 import { currentYearMonth, monthLabel } from "../../../lib/dates";
 import {
   listMonthEntries,
@@ -37,22 +37,30 @@ export default function Gastos() {
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
+  const doDelete = useCallback(
+    async (entry: ExpenseEntry) => {
+      try {
+        if (entry.kind === "manual") await softDeleteManualExpense(entry.id);
+        else await softDeleteReceipt(entry.id);
+        await load();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al eliminar");
+      }
+    },
+    [load],
+  );
+
   function confirmDelete(entry: ExpenseEntry) {
+    if (Platform.OS === "web") {
+      // RN-Web no implementa Alert.alert con callbacks — usar window.confirm
+      if (typeof window !== "undefined" && window.confirm(`¿Eliminar "${entry.title}"?`)) {
+        void doDelete(entry);
+      }
+      return;
+    }
     Alert.alert("Eliminar", `¿Eliminar "${entry.title}"?`, [
       { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (entry.kind === "manual") await softDeleteManualExpense(entry.id);
-            else await softDeleteReceipt(entry.id);
-            await load();
-          } catch (e) {
-            setError(e instanceof Error ? e.message : "Error al eliminar");
-          }
-        },
-      },
+      { text: "Eliminar", style: "destructive", onPress: () => void doDelete(entry) },
     ]);
   }
 
