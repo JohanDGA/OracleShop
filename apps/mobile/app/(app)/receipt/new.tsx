@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { CategoryPicker } from "../../../components/CategoryPicker";
+import { ProductPicker, type ProductPickerValue } from "../../../components/ProductPicker";
 import { getActiveHousehold } from "../../../services/household";
 import { createManualReceipt } from "../../../services/receipts";
 
@@ -12,13 +13,14 @@ interface ItemDraft {
   quantity: string;
   totalPrice: string;
   categoryId: string | null;
+  canonical: ProductPickerValue | null;
 }
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-const emptyItem: ItemDraft = { rawName: "", quantity: "1", totalPrice: "", categoryId: null };
+const emptyItem: ItemDraft = { rawName: "", quantity: "1", totalPrice: "", categoryId: null, canonical: null };
 
 export default function NewReceipt() {
   const router = useRouter();
@@ -33,7 +35,16 @@ export default function NewReceipt() {
   }, []);
 
   function updateItem(index: number, patch: Partial<ItemDraft>) {
-    setItems((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it, i) => {
+        if (i !== index) return it;
+        // Si el rawName cambia, invalidar canonical (el alias no aplica al nuevo texto).
+        if (patch.rawName !== undefined && patch.rawName !== it.rawName) {
+          return { ...it, ...patch, canonical: null };
+        }
+        return { ...it, ...patch };
+      }),
+    );
   }
   function addItem() {
     setItems((prev) => [...prev, { ...emptyItem }]);
@@ -60,6 +71,8 @@ export default function NewReceipt() {
         unitPrice: i.totalPrice,
         totalPrice: i.totalPrice,
         categoryId: i.categoryId,
+        canonicalProductId: i.canonical?.canonicalId ?? null,
+        aliasNormalized: i.canonical?.aliasNormalized ?? null,
       })),
     };
     const parsed = manualReceiptSchema.safeParse(payload);
@@ -70,6 +83,10 @@ export default function NewReceipt() {
     setBusy(true);
     try {
       await createManualReceipt(householdId, parsed.data);
+      // Instrumentación: emitir match_resolved 'manual' por items que se guardaron sin canonical (spec §6).
+      for (const it of items) {
+        if (!it.canonical) console.info("[match_resolved]", { layer: "manual" });
+      }
       router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al guardar la factura");
@@ -88,29 +105,40 @@ export default function NewReceipt() {
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Text style={{ fontWeight: "500" }}>Ítem {index + 1}</Text>
             {items.length > 1 ? (
-              <Pressable onPress={() => removeItem(index)}><Text style={{ color: "#b00" }}>Quitar</Text></Pressable>
+              <Pressable onPress={() => removeItem(index)}>
+                <Text style={{ color: "#b00" }}>Quitar</Text>
+              </Pressable>
             ) : null}
           </View>
           <TextInput
             placeholder="Nombre"
             value={item.rawName}
             onChangeText={(t) => updateItem(index, { rawName: t })}
-            style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10 }}
+            style={inputStyle}
           />
+          {householdId ? (
+            <ProductPicker
+              householdId={householdId}
+              rawName={item.rawName}
+              defaultCategoryId={item.categoryId}
+              value={item.canonical}
+              onChange={(c) => updateItem(index, { canonical: c })}
+            />
+          ) : null}
           <View style={{ flexDirection: "row", gap: 8 }}>
             <TextInput
               placeholder="Cantidad"
               keyboardType="numeric"
               value={item.quantity}
               onChangeText={(t) => updateItem(index, { quantity: t })}
-              style={{ flex: 1, borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10 }}
+              style={{ flex: 1, ...inputStyle }}
             />
             <TextInput
               placeholder="Total (COP)"
               keyboardType="numeric"
               value={item.totalPrice}
               onChangeText={(t) => updateItem(index, { totalPrice: t })}
-              style={{ flex: 1, borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10 }}
+              style={{ flex: 1, ...inputStyle }}
             />
           </View>
           {householdId ? (
@@ -135,3 +163,5 @@ export default function NewReceipt() {
     </ScrollView>
   );
 }
+
+const inputStyle = { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10 } as const;

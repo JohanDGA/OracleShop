@@ -1,7 +1,7 @@
 import type { ManualReceiptInput } from "@oraculo/validations";
 import { supabase } from "../lib/supabase";
 
-/** Crea una factura manual vía la RPC atómica. Devuelve el id del receipt. */
+/** Crea una factura manual vía la RPC atómica v2. Persiste alias si el ítem trae canonical. */
 export async function createManualReceipt(
   householdId: string,
   input: ManualReceiptInput,
@@ -13,6 +13,8 @@ export async function createManualReceipt(
     unit_price: i.unitPrice,
     total_price: i.totalPrice,
     category_id: i.categoryId,
+    canonical_product_id: i.canonicalProductId ?? null,
+    alias_normalized: i.aliasNormalized ?? null,
   }));
   const { data, error } = await supabase.rpc("create_receipt_with_items", {
     p_household_id: householdId,
