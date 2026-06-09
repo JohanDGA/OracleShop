@@ -22,3 +22,23 @@ export function normalizeName(raw: string): string {
 }
 
 export type StandardUnit = "lt" | "kg" | "un";
+
+/**
+ * Precio por unidad estándar (lt, kg, un) en BigInt escala 4.
+ * Todos los inputs y el output usan la misma escala que money.ts.
+ * Retorna null si alguna cantidad es 0.
+ */
+export function pricePerStandardUnit(input: {
+  unit: StandardUnit;
+  unitQuantity: bigint;
+  quantity: bigint;
+  totalPrice: bigint;
+}): bigint | null {
+  const { unitQuantity, quantity, totalPrice } = input;
+  if (unitQuantity === 0n || quantity === 0n) return null;
+  // total estándar = (quantity * unitQuantity) / 10000  (re-escala porque ambos están en escala 4)
+  const totalStandard = (quantity * unitQuantity) / 10_000n;
+  if (totalStandard === 0n) return null;
+  // precio por unidad = totalPrice * 10000 / totalStandard  (mantiene escala 4)
+  return (totalPrice * 10_000n) / totalStandard;
+}
