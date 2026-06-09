@@ -53,24 +53,26 @@ describe("match_product RPC", () => {
   });
 
   it("Capa 2: fuzzy retorna top-3 por score, sin duplicar canonical", async () => {
-    // alias adicional para el mismo canonical (debe dedupe)
-    const { data: existing } = await userA.client.from("canonical_products").select("id").eq("household_id", householdA).limit(1).single();
+    // Self-seed: no depende de fixtures de otros tests.
+    const cpId = await seedCanonical(userA.client, householdA, "Aceite Premier 1L", "ACEITE PREMIER 1L", "ACEITE PREMIER 1L");
+    // Segundo alias del MISMO canonical → debe dedupe a 1 sola entrada en el resultado.
     await userA.client.from("product_aliases").insert({
-      canonical_product_id: existing!.id,
-      alias: "LCHE ALPN",
-      alias_normalized: "LECHE ALPINA",
+      canonical_product_id: cpId,
+      alias: "ACT PRMR",
+      alias_normalized: "ACEITE PREMIER",
       source: "user_confirmed",
       confidence: 1.0,
     });
+    // Buscar "ACEITE PREMIE 1L": no exactea ningún alias_normalized → cae a Capa 2.
     const { data } = await userA.client.rpc("match_product", {
       p_household_id: householdA,
-      p_normalized: "LECHE ALPN",
+      p_normalized: "ACEITE PREMIE 1L",
     });
     // Sin exact (string distinto a cualquier alias_normalized)
     expect(data.exact).toBeNull();
-    // fuzzy debe tener exactamente 1 entrada (el canonical único)
-    expect(data.fuzzy.length).toBe(1);
-    expect(data.fuzzy[0].score).toBeGreaterThanOrEqual(0.6);
+    // fuzzy debe tener exactamente 1 entrada (el canonical único, deduplicado)
+    expect(data.fuzzy).toHaveLength(1);
+    expect(data.fuzzy[0]?.score).toBeGreaterThanOrEqual(0.6);
   });
 
   it("threshold: similarity < min_similarity → vacío", async () => {
@@ -180,5 +182,34 @@ describe("create_receipt_with_items v2 persiste alias", () => {
       .from("product_aliases")
       .select("id", { count: "exact", head: true });
     expect(after).toBe(before);
+  });
+
+  it("rechaza canonical_product_id de otro hogar", async () => {
+    // Canónico creado en hogar B (con service client para bypassear RLS).
+    const { data: cpB } = await service
+      .from("canonical_products")
+      .insert({ household_id: householdB, name: "Otro de B", unit: "un", unit_quantity: "1" })
+      .select("id")
+      .single();
+    // userA intenta usar el canónico de hogar B en una factura de hogar A → el guard del RPC bloquea.
+    const { error } = await userA.client.rpc("create_receipt_with_items", {
+      p_household_id: householdA,
+      p_store_id: null,
+      p_purchased_at: "2026-06-08",
+      p_currency: "COP",
+      p_items: [
+        {
+          raw_name: "Robado",
+          quantity: "1",
+          unit: null,
+          unit_price: "100",
+          total_price: "100",
+          category_id: null,
+          canonical_product_id: cpB!.id,
+          alias_normalized: "ROBADO",
+        },
+      ],
+    });
+    expect(error).not.toBeNull();
   });
 });

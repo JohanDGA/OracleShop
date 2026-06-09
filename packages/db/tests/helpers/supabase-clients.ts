@@ -114,7 +114,7 @@ export async function cleanupUser(service: SupabaseClient, userId: string): Prom
     }
     await service.from("receipts").delete().eq("household_id", hid);
     await service.from("manual_expenses").delete().eq("household_id", hid);
-    // Borrar product_aliases que pertenezcan a canonical_products del hogar antes de tocar receipts.
+    // Borrar product_aliases que pertenezcan a canonical_products del hogar antes de borrar canonical_products.
     const { data: canonicals } = await service
       .from("canonical_products")
       .select("id")
