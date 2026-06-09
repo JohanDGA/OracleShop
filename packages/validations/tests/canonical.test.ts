@@ -22,7 +22,10 @@ describe("createCanonicalSchema", () => {
   });
 
   it("rechaza unitQuantity <= 0", () => {
+    // "0" y "0.0000" pasan el regex pero fallan el refine de > 0
     expect(createCanonicalSchema.safeParse({ ...base, unitQuantity: "0" }).success).toBe(false);
+    expect(createCanonicalSchema.safeParse({ ...base, unitQuantity: "0.0000" }).success).toBe(false);
+    // "-1" falla el regex (no acepta el signo)
     expect(createCanonicalSchema.safeParse({ ...base, unitQuantity: "-1" }).success).toBe(false);
   });
 

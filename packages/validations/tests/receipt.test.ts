@@ -36,4 +36,14 @@ describe("receiptItemSchema con canonical opcional", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("rechaza ítem con alias_normalized pero sin canonicalProductId", () => {
+    expect(
+      receiptItemSchema.safeParse({
+        ...baseItem,
+        aliasNormalized: "LECHE ALPINA",
+        canonicalProductId: null,
+      }).success,
+    ).toBe(false);
+  });
 });

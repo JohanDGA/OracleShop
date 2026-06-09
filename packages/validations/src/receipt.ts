@@ -1,11 +1,6 @@
 import { z } from "zod";
 import { positiveAmount, isoDate } from "./expense";
-
-/** Cantidad NUMERIC(10,4): hasta 6 enteros + 4 decimales, > 0 (peso variable). */
-const positiveQuantity = z
-  .string()
-  .regex(/^\d{1,6}(\.\d{1,4})?$/, "Cantidad inválida")
-  .refine((s) => Number(s) > 0, "La cantidad debe ser mayor que 0");
+import { positiveQuantity } from "./shared";
 
 /** Precio NUMERIC(15,4) no negativo (puede ser 0 en líneas promocionales). */
 const nonNegativeAmount = z

@@ -1,9 +1,5 @@
 import { z } from "zod";
-
-const positiveQuantity = z
-  .string()
-  .regex(/^\d{1,6}(\.\d{1,4})?$/, "Cantidad inválida")
-  .refine((s) => Number(s) > 0, "La cantidad debe ser mayor que 0");
+import { positiveQuantity } from "./shared";
 
 export const createCanonicalSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(200),
