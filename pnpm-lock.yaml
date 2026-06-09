@@ -29,6 +29,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@oraculo/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@oraculo/validations':
         specifier: workspace:*
         version: link:../../packages/validations

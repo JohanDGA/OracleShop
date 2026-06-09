@@ -94,3 +94,87 @@ describe("create_receipt_with_items RPC", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("soft_delete RPCs", () => {
+  it("soft_delete_manual_expense marca deleted_at y oculta de la lista", async () => {
+    const { data: ins } = await userA.client
+      .from("manual_expenses")
+      .insert({
+        household_id: householdA,
+        created_by: userA.userId,
+        category_id: null,
+        description: "Para borrar",
+        amount: "1000",
+        currency: "COP",
+        occurred_at: "2026-06-07",
+      })
+      .select("id")
+      .single();
+    expect(ins?.id).toBeTruthy();
+
+    const { error } = await userA.client.rpc("soft_delete_manual_expense", { p_id: ins!.id });
+    expect(error).toBeNull();
+
+    // SELECT como user A ya no devuelve la fila (la SELECT policy oculta deleted_at != null)
+    const { data: visible } = await userA.client
+      .from("manual_expenses")
+      .select("id")
+      .eq("id", ins!.id);
+    expect(visible?.length).toBe(0);
+
+    // pero la fila físicamente existe con deleted_at != null (verificado vía service)
+    const { data: row } = await service
+      .from("manual_expenses")
+      .select("id, deleted_at")
+      .eq("id", ins!.id)
+      .single();
+    expect(row?.deleted_at).not.toBeNull();
+  });
+
+  it("RLS: A no puede soft-delete un manual_expense del hogar de B", async () => {
+    const { data: ins } = await service
+      .from("manual_expenses")
+      .insert({
+        household_id: householdB,
+        created_by: userB.userId,
+        category_id: null,
+        description: "De B",
+        amount: "500",
+        currency: "COP",
+        occurred_at: "2026-06-07",
+      })
+      .select("id")
+      .single();
+
+    const { error } = await userA.client.rpc("soft_delete_manual_expense", { p_id: ins!.id });
+    expect(error).not.toBeNull();
+
+    // sigue sin deleted_at
+    const { data: row } = await service
+      .from("manual_expenses")
+      .select("deleted_at")
+      .eq("id", ins!.id)
+      .single();
+    expect(row?.deleted_at).toBeNull();
+  });
+
+  it("soft_delete_receipt oculta la factura de la lista de A", async () => {
+    const { data: receiptId } = await userA.client.rpc("create_receipt_with_items", {
+      p_household_id: householdA,
+      p_store_id: null,
+      p_purchased_at: "2026-06-07",
+      p_currency: "COP",
+      p_items: [{ raw_name: "X", quantity: "1", unit: null, unit_price: "100", total_price: "100", category_id: null }],
+    });
+    expect(typeof receiptId).toBe("string");
+
+    const { error } = await userA.client.rpc("soft_delete_receipt", { p_id: receiptId as string });
+    expect(error).toBeNull();
+
+    const { data: visible } = await userA.client
+      .from("receipts")
+      .select("id")
+      .eq("id", receiptId as string);
+    expect(visible?.length).toBe(0);
+  });
+});
