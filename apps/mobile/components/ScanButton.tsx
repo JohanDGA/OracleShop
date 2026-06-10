@@ -40,11 +40,16 @@ export function ScanButton() {
         },
       );
     } else {
-      Alert.alert("Origen", "¿Cómo querés agregar la foto?", [
-        { text: "Tomar foto", onPress: () => void pickAndGo("camera") },
-        { text: "Galería", onPress: () => void pickAndGo("gallery") },
-        { text: "Cancelar", style: "cancel", onPress: () => setBusy(false) },
-      ]);
+      Alert.alert(
+        "Origen",
+        "¿Cómo querés agregar la foto?",
+        [
+          { text: "Tomar foto", onPress: () => void pickAndGo("camera") },
+          { text: "Galería", onPress: () => void pickAndGo("gallery") },
+          { text: "Cancelar", style: "cancel", onPress: () => setBusy(false) },
+        ],
+        { onDismiss: () => setBusy(false) },
+      );
     }
   }
 

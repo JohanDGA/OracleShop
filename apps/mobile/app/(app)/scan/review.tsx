@@ -224,7 +224,9 @@ export default function ReviewParsed() {
             />
           </View>
           {item.isPromo ? (
-            <Text style={{ color: "#16a34a" }}>🏷️ Promo (regular: {item.regularPrice ?? "?"})</Text>
+            <View style={{ backgroundColor: "#fef9c3", borderRadius: 6, paddingVertical: 6, paddingHorizontal: 10 }}>
+              <Text style={{ color: "#854d0e" }}>🏷️ Promo (regular: {item.regularPrice ?? "?"})</Text>
+            </View>
           ) : null}
           <CategoryPicker
             householdId={householdId}
