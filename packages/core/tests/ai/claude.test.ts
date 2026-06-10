@@ -90,6 +90,17 @@ describe("ClaudeProvider.parseReceipt", () => {
     }
   });
 
+  it("retry-success: primera bad JSON → segunda válida → ParseResult", async () => {
+    const mock = fetch as ReturnType<typeof vi.fn>;
+    const badResponse = { content: [{ type: "text", text: "not json" }] };
+    mock
+      .mockResolvedValueOnce(new Response(JSON.stringify(badResponse), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(validResponse), { status: 200 }));
+    const result = await new ClaudeProvider().parseReceipt(baseInput);
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(mock).toHaveBeenCalledTimes(2);
+  });
+
   it("JSON malformado → retry estricto y luego parse", async () => {
     const mock = fetch as ReturnType<typeof vi.fn>;
     const bad = { content: [{ type: "text", text: "not json" }] };
@@ -103,5 +114,29 @@ describe("ClaudeProvider.parseReceipt", () => {
       expect(isAIError(e) && e.kind).toBe("parse");
     }
     expect(mock).toHaveBeenCalledTimes(2);
+  });
+
+  it("items=[] → AIError kind='unreadable'", async () => {
+    const empty = {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            store_name: null,
+            purchased_at: "2026-06-09",
+            total: "0",
+            currency: "COP",
+            items: [],
+          }),
+        },
+      ],
+    };
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(new Response(JSON.stringify(empty), { status: 200 }));
+    try {
+      await new ClaudeProvider().parseReceipt(baseInput);
+      expect.fail();
+    } catch (e) {
+      expect(isAIError(e) && e.kind).toBe("unreadable");
+    }
   });
 });

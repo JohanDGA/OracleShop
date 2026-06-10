@@ -121,6 +121,17 @@ describe("GeminiProvider.parseReceipt", () => {
     expect(mock).toHaveBeenCalledTimes(2);
   });
 
+  it("retry-success: primera bad JSON → segunda válida → ParseResult", async () => {
+    const mock = fetch as ReturnType<typeof vi.fn>;
+    const badResponse = { candidates: [{ content: { parts: [{ text: "no json" }] } }] };
+    mock
+      .mockResolvedValueOnce(new Response(JSON.stringify(badResponse), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(validResponseBody), { status: 200 }));
+    const result = await new GeminiProvider().parseReceipt(baseInput);
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(mock).toHaveBeenCalledTimes(2);
+  });
+
   it("items=[] → AIError kind='unreadable'", async () => {
     const empty = {
       candidates: [

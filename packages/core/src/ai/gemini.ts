@@ -3,7 +3,8 @@ import { toAIError, wrapWithText } from "./error";
 import { buildSystemPrompt, buildUserPrompt } from "./prompt";
 import type { AIProvider, AIProviderInput, ParseResult } from "./types";
 
-const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const MODEL = "gemini-2.0-flash";
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 interface GeminiResponseBody {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
@@ -23,6 +24,8 @@ export class GeminiProvider implements AIProvider {
   }
 
   private async call(input: AIProviderInput, strict: boolean): Promise<ParseResult> {
+    // Nota: Gemini v1beta solo soporta key como query param; la API key aparecerá en
+    // logs de access del server y en URL traces. Claude/OpenAI usan headers.
     const url = `${ENDPOINT}?key=${encodeURIComponent(input.apiKey)}`;
     const systemPrompt = buildSystemPrompt() + (strict ? "\nIMPORTANTE: SOLO JSON. Nada de markdown, ni texto fuera del JSON." : "");
     const userPrompt = buildUserPrompt(input.canonicalHints);

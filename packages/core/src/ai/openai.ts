@@ -25,7 +25,7 @@ export class OpenAIProvider implements AIProvider {
 
   private async call(input: AIProviderInput, strict: boolean): Promise<ParseResult> {
     const systemPrompt =
-      buildSystemPrompt() + (strict ? "\nIMPORTANTE: SOLO JSON, sin markdown." : "");
+      buildSystemPrompt() + (strict ? "\nIMPORTANTE: SOLO JSON. Nada de markdown ni texto fuera del JSON." : "");
     const userPrompt = buildUserPrompt(input.canonicalHints);
     const body = {
       model: MODEL,
