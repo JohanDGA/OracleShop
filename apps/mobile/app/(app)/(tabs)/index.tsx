@@ -10,6 +10,7 @@ import {
   type ExpenseEntry,
 } from "../../../services/expenses";
 import { getActiveHousehold } from "../../../services/household";
+import { ScanButton } from "../../../components/ScanButton";
 
 export default function Gastos() {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function Gastos() {
         />
       )}
 
-      <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+      <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
         <Pressable
           onPress={() => router.push("/(app)/expense/new")}
           style={{ flex: 1, backgroundColor: "#111", borderRadius: 8, padding: 14, alignItems: "center" }}
@@ -108,6 +109,7 @@ export default function Gastos() {
         >
           <Text style={{ color: "#fff" }}>+ Factura</Text>
         </Pressable>
+        <ScanButton />
       </View>
     </View>
   );
