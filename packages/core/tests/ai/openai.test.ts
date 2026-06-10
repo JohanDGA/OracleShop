@@ -92,7 +92,9 @@ describe("OpenAIProvider.parseReceipt", () => {
   it("JSON malformado → retry estricto y luego parse", async () => {
     const mock = fetch as ReturnType<typeof vi.fn>;
     const bad = { choices: [{ message: { content: "no json" } }] };
-    mock.mockResolvedValue(new Response(JSON.stringify(bad), { status: 200 }));
+    mock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify(bad), { status: 200 })),
+    );
     try {
       await new OpenAIProvider().parseReceipt(baseInput);
       expect.fail();

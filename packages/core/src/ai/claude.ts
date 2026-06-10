@@ -68,14 +68,7 @@ export class ClaudeProvider implements AIProvider {
     if (!response.ok) {
       throw await wrapWithText(toAIError(response, "claude"), response);
     }
-    let json: ClaudeResponseBody;
-    try {
-      json = (await response.json()) as ClaudeResponseBody;
-    } catch (e) {
-      const err = toAIError(e instanceof Error ? e : new Error("json read failed"), "claude");
-      err.kind = "parse";
-      throw err;
-    }
+    const json = (await response.json()) as ClaudeResponseBody;
     const text = json.content?.find((c) => c.type === "text")?.text;
     if (!text) {
       const e = toAIError(new Error("missing text"), "claude");

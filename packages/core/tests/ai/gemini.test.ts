@@ -109,7 +109,9 @@ describe("GeminiProvider.parseReceipt", () => {
     const badResponse = {
       candidates: [{ content: { parts: [{ text: "no soy json" }] } }],
     };
-    mock.mockResolvedValue(new Response(JSON.stringify(badResponse), { status: 200 }));
+    mock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify(badResponse), { status: 200 })),
+    );
     try {
       await new GeminiProvider().parseReceipt(baseInput);
       expect.fail();

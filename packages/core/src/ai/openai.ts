@@ -65,14 +65,7 @@ export class OpenAIProvider implements AIProvider {
     if (!response.ok) {
       throw await wrapWithText(toAIError(response, "openai"), response);
     }
-    let json: OpenAIResponseBody;
-    try {
-      json = (await response.json()) as OpenAIResponseBody;
-    } catch (e) {
-      const err = toAIError(e instanceof Error ? e : new Error("json read failed"), "openai");
-      err.kind = "parse";
-      throw err;
-    }
+    const json = (await response.json()) as OpenAIResponseBody;
     const text = json.choices?.[0]?.message?.content;
     if (!text) {
       const e = toAIError(new Error("missing content"), "openai");

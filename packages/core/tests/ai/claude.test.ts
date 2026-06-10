@@ -93,7 +93,9 @@ describe("ClaudeProvider.parseReceipt", () => {
   it("JSON malformado → retry estricto y luego parse", async () => {
     const mock = fetch as ReturnType<typeof vi.fn>;
     const bad = { content: [{ type: "text", text: "not json" }] };
-    mock.mockResolvedValue(new Response(JSON.stringify(bad), { status: 200 }));
+    mock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify(bad), { status: 200 })),
+    );
     try {
       await new ClaudeProvider().parseReceipt(baseInput);
       expect.fail();

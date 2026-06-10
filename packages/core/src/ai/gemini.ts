@@ -57,14 +57,7 @@ export class GeminiProvider implements AIProvider {
     if (!response.ok) {
       throw await wrapWithText(toAIError(response, "gemini"), response);
     }
-    let json: GeminiResponseBody;
-    try {
-      json = (await response.json()) as GeminiResponseBody;
-    } catch (e) {
-      const err = toAIError(e instanceof Error ? e : new Error("json parse failed"), "gemini");
-      err.kind = "parse";
-      throw err;
-    }
+    const json = (await response.json()) as GeminiResponseBody;
     const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       const e = toAIError(new Error("missing text in response"), "gemini");
