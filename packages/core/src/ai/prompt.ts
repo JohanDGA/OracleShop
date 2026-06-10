@@ -7,7 +7,7 @@ export function buildSystemPrompt(): string {
     "Si un campo no es legible, usa null (no inventes).",
     "Detecta descuentos: si la factura muestra precio regular y precio pagado, llena regular_price y marca is_promo=true.",
     "Para cada ítem, intenta matchear con uno de los productos del hogar provistos. Si hay match razonable (>=0.6 confianza), devuelve su id en suggested_canonical_id; si no, deja null.",
-    "Si no puedes leer la factura, devuelve la estructura con items=[] y total=null.",
+    "Si no puedes leer la factura, devuelve la estructura con items=[] y total=\"0\".",
   ].join("\n");
 }
 

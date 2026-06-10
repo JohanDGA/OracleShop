@@ -61,4 +61,8 @@ describe("parseResultSchema", () => {
   it("acepta items vacío (factura ilegible que igual responde estructura)", () => {
     expect(parseResultSchema.safeParse({ ...validReceipt, items: [] }).success).toBe(true);
   });
+
+  it("rechaza fechas que parecen ISO pero no existen (2026-02-30)", () => {
+    expect(parseResultSchema.safeParse({ ...validReceipt, purchased_at: "2026-02-30" }).success).toBe(false);
+  });
 });

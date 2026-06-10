@@ -1,8 +1,5 @@
 import { z } from "zod";
-
-const moneyString = z.string().regex(/^\d{1,11}(\.\d{1,4})?$/, "Monto inválido");
-const quantityString = z.string().regex(/^\d{1,6}(\.\d{1,4})?$/, "Cantidad inválida");
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha ISO inválida (YYYY-MM-DD)");
+import { moneyString, quantityString, isoDateString } from "./shared";
 
 export const parseResultItemSchema = z.object({
   raw_name: z.string().trim().min(1).max(200),
@@ -18,7 +15,7 @@ export const parseResultItemSchema = z.object({
 
 export const parseResultSchema = z.object({
   store_name: z.string().trim().min(1).max(200).nullable(),
-  purchased_at: isoDate,
+  purchased_at: isoDateString,
   total: moneyString,
   currency: z.literal("COP"),
   items: z.array(parseResultItemSchema),
