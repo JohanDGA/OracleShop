@@ -12,9 +12,16 @@ const MAX_DIMENSION = 1280;
 const JPEG_QUALITY = 0.85;
 
 async function compressAndEncode(uri: string): Promise<CapturedImage> {
+  // Primero leemos las dimensiones (manipulate sin acciones es no-op para conocer width/height).
+  const info = await ImageManipulator.manipulateAsync(uri, [], { base64: false });
+  // Resize por el lado mayor para garantizar max 1280.
+  const resizeAction =
+    info.width >= info.height
+      ? { resize: { width: MAX_DIMENSION } }
+      : { resize: { height: MAX_DIMENSION } };
   const manipulated = await ImageManipulator.manipulateAsync(
     uri,
-    [{ resize: { width: MAX_DIMENSION } }],
+    [resizeAction],
     { compress: JPEG_QUALITY, base64: true, format: ImageManipulator.SaveFormat.JPEG },
   );
   if (!manipulated.base64) {

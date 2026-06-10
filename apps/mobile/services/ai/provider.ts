@@ -33,10 +33,11 @@ export async function getCanonicalHints(householdId: string, limit = 50): Promis
   if (error) throw new Error(error.message);
   if (!canonicals || canonicals.length === 0) return [];
   const ids = canonicals.map((c) => c.id as string);
-  const { data: aliases } = await supabase
+  const { data: aliases, error: aliasError } = await supabase
     .from("product_aliases")
     .select("canonical_product_id, alias_normalized")
     .in("canonical_product_id", ids);
+  if (aliasError) throw new Error(aliasError.message);
   const byCanonical = new Map<string, string[]>();
   for (const a of aliases ?? []) {
     const arr = byCanonical.get(a.canonical_product_id as string) ?? [];
